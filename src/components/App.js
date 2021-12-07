@@ -1,8 +1,10 @@
-import React, { useEffect, useState } from 'react';
-import { Spin } from 'antd';
+import React, { useState } from 'react';
+import _ from 'lodash';
+import { Spin, Alert, Input, Empty, Pagination } from 'antd';
 import { LoadingOutlined } from '@ant-design/icons';
 import MovieList from './MovieList/MovieList';
 import MoviesService from '../API/MoviesService';
+
 
 
 
@@ -12,46 +14,55 @@ function App() {
     {
       movies: [],
       searchTerm: 'return',
+      pageSize: 20,
       totalResults: 0,
       currentPage: 1,
       currentMovie: null,
-      loading: true,
+      toSearch: false,
+      loading: false,
+      error: false,
     }
   );
 
-  // const API_KEY = '7d69d7ca3c0fc515994ec1af1752bd66';
 
   const moviesService = new MoviesService();
 
 
 
-  const getMovies = () => {
-    // fetch(`https://api.themoviedb.org/3/search/movie?api_key=${API_KEY}&query=${options.searchTerm}`)
-    //   .then(data => data.json())
-    //   .then(data => {
-    //     console.log(data);
-    //     setOptions({
-    //       ...options, movies: [...data.results], totalResults: data.total_results
-    //     })
-    //   })
-    moviesService.getTermsMovies(options.searchTerm)
-      .then(data => {
-        console.log(data);
-        setOptions({
-          ...options, movies: [...data.results], totalResults: data.total_results
-        })
+  const getMovies = (terms, pageNumber = 1) => {
+
+    if (terms) {
+      setOptions({
+        ...options, loading: true
       })
 
+      moviesService.getTermsMovies(terms, pageNumber)
+        .then(data => {
+          console.log(data);
+          setOptions({
+            ...options,
+            movies: [...data.results],
+            totalResults: data.total_results,
+            loading: false,
+            toSearch: true
+          })
+        })
+        .catch(() => {
+          setOptions({ ...options, error: true, loading: false })
+        })
+    }
   }
 
 
 
 
 
-  useEffect(() => {
-    getMovies();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+
+
+  // useEffect(() => {
+  //   getMovies();
+  //   // eslint-disable-next-line react-hooks/exhaustive-deps
+  // }, [])
 
   const antIcon = <LoadingOutlined style={{ fontSize: 50 }} spin />;
 
@@ -59,9 +70,42 @@ function App() {
 
   return (
     <div className="container">
+      <Input
+        placeholder="Найти фильм"
+        style={{ marginBottom: 50 }}
+        onChange={_.debounce((evt) => getMovies(evt.target.value.trim()), 500)}
+      />
       {
-        options.loading ? <MovieList movies={options.movies} /> : <Spin indicator={antIcon} />
+        options.loading
+          ? <Spin indicator={antIcon} />
+          : null
       }
+      {
+        options.error
+          ? <Alert message="Ошибка" description="Что-то пошло не так. Повторите попытку позже!!!" type="error" showIcon />
+          : null
+      }
+      {
+        !options.movies.length && options.toSearch
+          ? <Empty description={<span>Фильм не найден!</span>} />
+          : null
+      }
+      {
+        options.movies.length
+          ? <div>
+            <MovieList movies={options.movies} />
+            <Pagination
+              style={{ display: 'flex', justifyContent: "center", marginTop: 30 }}
+              defaultCurrent={1}
+              total={options.totalResults}
+              defaultPageSize={options.pageSize}
+              onChange={(page) => getMovies(options.searchTerm, page)}
+            />
+          </div>
+          : null
+      }
+
+
     </div>
   );
 }

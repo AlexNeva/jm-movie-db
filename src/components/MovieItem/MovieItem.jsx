@@ -29,7 +29,7 @@ function MovieItem({ movie }) {
       <Meta title={movie.title} />
       <div className="movie-card__date">
         {/* {movie.release_date} */}
-        {format(new Date(movie.release_date), 'LLLL d, yyyy')}
+        {movie.release_date ? format(new Date(movie.release_date), 'LLLL d, yyyy') : 'нет данных'}
       </div>
       <div className="movie-card__tags">
         <Tag>tag</Tag>

@@ -7,10 +7,14 @@ export default class MoviesService {
   async getResource(url) {
     const res = await fetch(`${this.API_BASE}${url}`);
 
+    if (!res.ok) {
+      throw new Error('404')
+    }
+
     return res.json();
   }
 
-  getTermsMovies(term) {
-    return this.getResource(`&query=${term}`)
+  getTermsMovies(term, pageNumber) {
+    return this.getResource(`&query=${term}&page=${pageNumber}`)
   }
 }
