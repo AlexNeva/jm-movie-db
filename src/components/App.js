@@ -1,16 +1,23 @@
-import React, { useState } from 'react';
-import _ from 'lodash';
-import { Spin, Alert, Input, Empty, Pagination } from 'antd';
-import { LoadingOutlined } from '@ant-design/icons';
-import MovieList from './MovieList/MovieList';
+/* eslint-disable import/no-cycle */
+import React, { useState, useEffect, createContext } from 'react';
+import { Tabs } from 'antd';
 import MoviesService from '../API/MoviesService';
+import SessionService from '../API/SessionService';
+
+import SearchBlock from './SearchBlock/SearchBlock';
+
+import RatedBlock from './RatedBlock/RatedBlock';
+
+export const GenresContext = createContext(null)
 
 
 
 
 function App() {
+  const moviesService = new MoviesService();
+  const sessionService = new SessionService();
 
-  const [options, setOptions] = useState(
+  const [movies, setMovies] = useState(
     {
       movies: [],
       searchTerm: 'return',
@@ -24,88 +31,102 @@ function App() {
     }
   );
 
+  const [sessionId, setSessionId] = useState(null);
 
-  const moviesService = new MoviesService();
+  const [ratedMovies, setRatedMovies] = useState([]);
+
+  const [genres, setGenres] = useState([])
+
 
 
 
   const getMovies = (terms, pageNumber = 1) => {
 
     if (terms) {
-      setOptions({
-        ...options, loading: true
+      setMovies({
+        ...movies, loading: true,
       })
 
       moviesService.getTermsMovies(terms, pageNumber)
         .then(data => {
           console.log(data);
-          setOptions({
-            ...options,
+          setMovies({
+            ...movies,
             movies: [...data.results],
             totalResults: data.total_results,
             loading: false,
-            toSearch: true
+            toSearch: true,
+            searchTerm: terms
           })
         })
         .catch(() => {
-          setOptions({ ...options, error: true, loading: false })
+          setMovies({ ...movies, error: true, loading: false })
         })
     }
   }
 
+  const createNewSession = () => {
+    sessionService.createSession()
+      .then(data => {
+
+        setSessionId(data.guest_session_id)
+      })
+      .catch((err) => err)
+  }
+
+  const getMyRatedMovies = () => {
+    sessionService.getRatedFilms(sessionId)
+      .then(data => {
+        console.log(data.results);
+        setRatedMovies(data.results)
+
+      })
+      .catch((err) => err)
+  }
+
+  const setMyRatedMovies = (movieId, rating) => {
+    sessionService.postMovieRating(sessionId, movieId, rating)
+  }
+
+  const getAllGenres = () => {
+    moviesService.getGenres()
+      .then(data => {
+        setGenres(data.genres);
+        console.log(data.genres);
+
+      })
+      .catch((err) => err)
+  }
+
+
+
+  useEffect(() => {
+    createNewSession();
+    getAllGenres();
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
 
 
 
+  const { TabPane } = Tabs;
 
-
-  // useEffect(() => {
-  //   getMovies();
-  //   // eslint-disable-next-line react-hooks/exhaustive-deps
-  // }, [])
-
-  const antIcon = <LoadingOutlined style={{ fontSize: 50 }} spin />;
 
 
 
   return (
     <div className="container">
-      <Input
-        placeholder="Найти фильм"
-        style={{ marginBottom: 50 }}
-        onChange={_.debounce((evt) => getMovies(evt.target.value.trim()), 500)}
-      />
-      {
-        options.loading
-          ? <Spin indicator={antIcon} />
-          : null
-      }
-      {
-        options.error
-          ? <Alert message="Ошибка" description="Что-то пошло не так. Повторите попытку позже!!!" type="error" showIcon />
-          : null
-      }
-      {
-        !options.movies.length && options.toSearch
-          ? <Empty description={<span>Фильм не найден!</span>} />
-          : null
-      }
-      {
-        options.movies.length
-          ? <div>
-            <MovieList movies={options.movies} />
-            <Pagination
-              style={{ display: 'flex', justifyContent: "center", marginTop: 30 }}
-              defaultCurrent={1}
-              total={options.totalResults}
-              defaultPageSize={options.pageSize}
-              onChange={(page) => getMovies(options.searchTerm, page)}
-            />
-          </div>
-          : null
-      }
-
-
+      <GenresContext.Provider value={genres}>
+        <Tabs defaultActiveKey="1" onTabClick={(key) => key === '2' ? getMyRatedMovies() : null}>
+          <TabPane tab="Search" key="1">
+            <SearchBlock options={movies} getMovies={getMovies} setMyRatedMovies={setMyRatedMovies} />
+          </TabPane>
+          <TabPane tab="Rated" key="2">
+            <RatedBlock ratedMovies={ratedMovies} setMyRatedMovies={setMyRatedMovies} />
+          </TabPane>
+        </Tabs>
+      </GenresContext.Provider>
     </div>
   );
 }

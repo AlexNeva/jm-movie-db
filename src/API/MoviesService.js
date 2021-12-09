@@ -2,7 +2,7 @@ export default class MoviesService {
 
   API_KEY = '7d69d7ca3c0fc515994ec1af1752bd66';
 
-  API_BASE = `https://api.themoviedb.org/3/search/movie?api_key=${this.API_KEY}`;
+  API_BASE = `https://api.themoviedb.org/3/`;
 
   async getResource(url) {
     const res = await fetch(`${this.API_BASE}${url}`);
@@ -15,6 +15,11 @@ export default class MoviesService {
   }
 
   getTermsMovies(term, pageNumber) {
-    return this.getResource(`&query=${term}&page=${pageNumber}`)
+    return this.getResource(`search/movie?api_key=${this.API_KEY}&query=${term}&page=${pageNumber}`)
   }
+
+  getGenres() {
+    return this.getResource(`genre/movie/list?api_key=${this.API_KEY}&language=en-US`)
+  }
+
 }
