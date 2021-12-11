@@ -9,7 +9,7 @@ function MovieList({ movies, setMyRatedMovies }) {
     <Row gutter={[35, 35]}>
       {
         movies.map(movie => (
-          <Col span={12} key={movie.id}>
+          <Col span={24} xl={12} key={movie.id}>
             <MovieItem movie={movie} setMyRatedMovies={setMyRatedMovies} />
           </Col>
         ))
