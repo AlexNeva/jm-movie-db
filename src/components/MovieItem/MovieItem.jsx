@@ -86,12 +86,12 @@ function MovieItem({ movie, setMyRatedMovies }) {
       <div className="movie-card__tags">
         <GenresContext.Consumer>
           {genres => genres.map(genre => movie.genre_ids.includes(genre.id)
-            ? <Tag style={{ marginBottom: 8 }}>{genre.name}</Tag>
+            ? <Tag key={genre.id} style={{ marginBottom: 8 }}>{genre.name}</Tag>
             : null)}
         </GenresContext.Consumer>
       </div>
       <p className="movie-card__descr">
-        {truncate(movie.overview, 150, true)}
+        {movie.overview ? truncate(movie.overview, 150, true) : 'No further description'}
       </p>
       <Rate
         allowHalf
@@ -110,7 +110,7 @@ MovieItem.defaultProps = {
 };
 
 MovieItem.propTypes = {
-  movie: PropTypes.objectOf(PropTypes.object),
+  movie: PropTypes.objectOf(PropTypes.any),
   setMyRatedMovies: PropTypes.func
 };
 

@@ -1,3 +1,4 @@
+/* eslint-disable import/no-cycle */
 import React from 'react';
 import PropTypes from 'prop-types';
 import _ from 'lodash';
@@ -40,6 +41,7 @@ function SearchBlock({ options, getMovies, setMyRatedMovies }) {
               total={options.totalResults}
               defaultPageSize={options.pageSize}
               onChange={(page) => getMovies(options.searchTerm, page)}
+              showSizeChanger={false}
             />
           </div>
           : null
