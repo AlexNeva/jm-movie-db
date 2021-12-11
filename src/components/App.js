@@ -49,7 +49,6 @@ function App() {
 
       moviesService.getTermsMovies(terms, pageNumber)
         .then(data => {
-          console.log(data);
           setMovies({
             ...movies,
             movies: [...data.results],
@@ -77,7 +76,6 @@ function App() {
   const getMyRatedMovies = () => {
     sessionService.getRatedFilms(sessionId)
       .then(data => {
-        console.log(data.results);
         setRatedMovies(data.results)
 
       })
@@ -92,8 +90,6 @@ function App() {
     moviesService.getGenres()
       .then(data => {
         setGenres(data.genres);
-        console.log(data.genres);
-
       })
       .catch((err) => err)
   }
